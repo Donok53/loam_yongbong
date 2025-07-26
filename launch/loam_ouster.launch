@@ -4,21 +4,30 @@
   <arg name="scanPeriod" default="0.1" />
   <arg name="use_imu" default="false" />
 
+  <!-- IMU frame_id 수정을 위한 Python 노드 -->
+  <group if="$(arg use_imu)">
+    <node pkg="loam_ouster" type="imu_frame_fixer.py" name="imu_frame_fixer" output="screen" />
+  </group>
+
   <node pkg="loam_ouster" type="multiScanRegistration" name="multiScanRegistration" output="screen">
     <param name="lidar" value="OS-128-gen1" /> <!-- options:  OS-64-gen1 OS-64-gen2 OS-128-gen1 VLP-16  HDL-32  HDL-64E -->
     <param name="scanPeriod" value="$(arg scanPeriod)" />
     <param name="use_imu" value="$(arg use_imu)" />
+    <param name="imuHistorySize" value="400" /> <!-- Increased for better rotation tracking -->
     <remap from="/multi_scan_points" to="/ouster/points" />
+    <remap from="/imu/data" to="/imu/data_transformed" if="$(arg use_imu)" />
   </node>
 
   <node pkg="loam_ouster" type="laserOdometry" name="laserOdometry" output="screen" respawn="true">
     <param name="scanPeriod" value="$(arg scanPeriod)" />
     <param name="use_imu" value="$(arg use_imu)" />
+    <remap from="/imu/data" to="/imu/data_transformed" if="$(arg use_imu)" />
   </node>
 
   <node pkg="loam_ouster" type="laserMapping" name="laserMapping" output="screen">
     <param name="scanPeriod" value="$(arg scanPeriod)" />
     <param name="use_imu" value="$(arg use_imu)" />
+    <remap from="/imu/data" to="/imu/data_transformed" if="$(arg use_imu)" />
   </node>
 
   <node pkg="loam_ouster" type="transformMaintenance" name="transformMaintenance" output="screen">

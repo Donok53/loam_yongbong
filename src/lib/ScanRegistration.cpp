@@ -233,7 +233,7 @@ void ScanRegistration::handleIMUMessage(const sensor_msgs::Imu::ConstPtr& imuIn)
   Vector3 acc;
   acc.x() = float(imuIn->linear_acceleration.y - sin(roll) * cos(pitch) * 9.81);
   acc.y() = float(imuIn->linear_acceleration.z - cos(roll) * cos(pitch) * 9.81);
-  acc.z() = float(imuIn->linear_acceleration.x + sin(pitch) * 9.81);
+  acc.z() = float(imuIn->linear_acceleration.x - sin(pitch) * 9.81);
 
   IMUState newState;
   newState.stamp = imuIn->header.stamp;
