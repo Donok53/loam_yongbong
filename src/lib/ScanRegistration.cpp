@@ -200,7 +200,14 @@ bool ScanRegistration::setup(ros::NodeHandle& node,
   _imuHistory.ensureCapacity(_config.imuHistorySize);
 
   // subscribe to IMU topic
-  _subImu = node.subscribe<sensor_msgs::Imu>("/imu/data", 50, &ScanRegistration::handleIMUMessage, this);
+  bool useImu = true;
+  privateNode.param("use_imu", useImu, true);
+  if (useImu) {
+    _subImu = node.subscribe<sensor_msgs::Imu>("/imu/data", 50, &ScanRegistration::handleIMUMessage, this);
+    ROS_INFO("IMU topic subscription enabled.");
+  } else {
+    ROS_WARN("IMU topic subscription disabled by parameter.");
+  }
 
 
   // advertise scan registration topics

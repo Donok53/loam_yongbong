@@ -208,7 +208,14 @@ bool LaserMapping::setup(ros::NodeHandle& node,
       ("/velodyne_cloud_3", 2, &LaserMapping::laserCloudFullResHandler, this);
 
   // subscribe to IMU topic
-  _subImu = node.subscribe<sensor_msgs::Imu> ("/imu/data", 50, &LaserMapping::imuHandler, this);
+  bool useImu = true;
+  privateNode.param("use_imu", useImu, true);
+  if (useImu) {
+    _subImu = node.subscribe<sensor_msgs::Imu> ("/imu/data", 50, &LaserMapping::imuHandler, this);
+    ROS_INFO("IMU topic subscription enabled.");
+  } else {
+    ROS_WARN("IMU topic subscription disabled by parameter.");
+  }
 
   return true;
 }
@@ -836,14 +843,14 @@ void LaserMapping::optimizeTransformTobeMapped()
           float y2 = vc.y() - 0.1 * matV1(1, 2);
           float z2 = vc.z() - 0.1 * matV1(2, 2);
 
+          float l12 = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+
           float a012 = sqrt(((x0 - x1)*(y0 - y2) - (x0 - x2)*(y0 - y1))
                             * ((x0 - x1)*(y0 - y2) - (x0 - x2)*(y0 - y1))
                             + ((x0 - x1)*(z0 - z2) - (x0 - x2)*(z0 - z1))
                               * ((x0 - x1)*(z0 - z2) - (x0 - x2)*(z0 - z1))
                             + ((y0 - y1)*(z0 - z2) - (y0 - y2)*(z0 - z1))
-                              * ((y0 - y1)*(z0 - z2) - (y0 - y2)*(z0 - z1)));
-
-          float l12 = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+                              * ((y0 - y1)*(z0 - z2) - (y0 - y2)*(z0 - z1))) / l12;
 
           float la = ((y1 - y2)*((x0 - x1)*(y0 - y2) - (x0 - x2)*(y0 - y1))
                       + (z1 - z2)*((x0 - x1)*(z0 - z2) - (x0 - x2)*(z0 - z1))) / a012 / l12;
